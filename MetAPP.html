@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MetAPP – MALI-METEO</title>
+
+<!-- ===== PWA ===== -->
+<link rel="manifest" href="manifest.json">
+
+<style>
+/* ===================== CSS ===================== */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eef2f3;
+}
+
+header {
+  background: #0a5275;
+  color: white;
+  padding: 15px;
+  text-align: center;
+}
+
+nav {
+  display: flex;
+  background: white;
+  border-bottom: 1px solid #ccc;
+}
+
+nav button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+nav button:hover {
+  background: #f0f0f0;
+}
+
+.page {
+  display: none;
+  padding: 15px;
+}
+
+.page.active {
+  display: block;
+}
+
+select, audio, a {
+  width: 100%;
+  margin-top: 10px;
+}
+
+footer {
+  background: #0a5275;
+  color: white;
+  text-align: center;
+  padding: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>MetAPP</h1>
+  <p>Application officielle – MALI-METEO</p>
+</header>
+
+<nav>
+  <button onclick="showPage('accueil')">Accueil</button>
+  <button onclick="showPage('previsions')">Prévisions</button>
+  <button onclick="showPage('donnees')">Données</button>
+  <button onclick="showPage('archives')">Archives</button>
+  <button onclick="showPage('aide')">Aide</button>
+</nav>
+
+<main>
+
+<section id="accueil" class="page active">
+  <h2>Bienvenue</h2>
+  <p>MALI-METEO est le service national chargé de la météorologie au Mali.</p>
+  <p>Contact : contact@malimeteo.ml</p>
+</section>
+
+<section id="previsions" class="page">
+  <h2>Prévisions météorologiques</h2>
+
+  <select id="typePrev" onchange="chargerPrevision()">
+    <option value="quotidienne">Quotidienne</option>
+    <option value="hebdomadaire">Hebdomadaire</option>
+    <option value="saisonniere">Saisonnière</option>
+  </select>
+
+  <div id="contenuPrev"></div>
+</section>
+
+<section id="donnees" class="page">
+  <h2>Requête de données</h2>
+  <p>Soumettez une demande officielle de données météorologiques.</p>
+  <a href="#" onclick="alert('Formulaire à intégrer')">Ouvrir le formulaire</a>
+</section>
+
+<section id="archives" class="page">
+  <h2>Archives météo</h2>
+  <p>Historique des événements météorologiques du Mali.</p>
+</section>
+
+<section id="aide" class="page">
+  <h2>Aide & Glossaire</h2>
+  <div id="glossaire"></div>
+</section>
+
+</main>
+
+<footer>
+  © MALI-METEO – MetAPP
+</footer>
+
+<script>
+/* ===================== JAVASCRIPT ===================== */
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+const previsions = {
+  quotidienne: {
+    texte: "Temps chaud avec possibilité d’orage isolé.",
+    audio: ""
+  },
+  hebdomadaire: {
+    texte: "Pluies modérées attendues cette semaine.",
+    audio: ""
+  },
+  saisonniere: {
+    texte: "Saison des pluies normale à excédentaire.",
+    audio: ""
+  }
+};
+
+function chargerPrevision() {
+  const type = document.getElementById("typePrev").value;
+  const data = previsions[type];
+
+  document.getElementById("contenuPrev").innerHTML = `
+    <p>${data.texte}</p>
+    ${data.audio ? `<audio controls src="${data.audio}"></audio>` : ""}
+  `;
+}
+
+const glossaire = [
+  { terme: "Orage", definition: "Phénomène avec pluie, vent et tonnerre." },
+  { terme: "Vigilance", definition: "Niveau d’alerte météorologique." }
+];
+
+let ghtml = "";
+glossaire.forEach(g => {
+  ghtml += `<p><strong>${g.terme}</strong> : ${g.definition}</p>`;
+});
+document.getElementById("glossaire").innerHTML = ghtml;
+
+chargerPrevision();
+
+/* ===== SERVICE WORKER ===== */
+if ("serviceWorker" in navigator) {
+  const swCode = `
+    self.addEventListener('install', e => {
+      e.waitUntil(
+        caches.open('metapp-cache').then(cache => cache.addAll(['./']))
+      );
+    });
+  `;
+  const blob = new Blob([swCode], { type: "text/javascript" });
+  const swURL = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swURL);
+}
+</script>
+
+</body>
+</html>
