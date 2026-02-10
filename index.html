@@ -125,15 +125,17 @@ footer {
 <script>
 /* ===================== JAVASCRIPT ===================== */
 
+// Navigation entre pages
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
+// Prévisions météo (texte + audio)
 const previsions = {
   quotidienne: {
     texte: "Temps chaud avec possibilité d’orage isolé.",
-    audio: ""
+    audio: "" // Ajouter fichier mp3/ogg ici
   },
   hebdomadaire: {
     texte: "Pluies modérées attendues cette semaine.",
@@ -155,6 +157,7 @@ function chargerPrevision() {
   `;
 }
 
+// Glossaire
 const glossaire = [
   { terme: "Orage", definition: "Phénomène avec pluie, vent et tonnerre." },
   { terme: "Vigilance", definition: "Niveau d’alerte météorologique." }
@@ -170,18 +173,12 @@ chargerPrevision();
 
 /* ===== SERVICE WORKER ===== */
 if ("serviceWorker" in navigator) {
-  const swCode = `
-    self.addEventListener('install', e => {
-      e.waitUntil(
-        caches.open('metapp-cache').then(cache => cache.addAll(['./']))
-      );
-    });
-  `;
-  const blob = new Blob([swCode], { type: "text/javascript" });
-  const swURL = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swURL);
+  navigator.serviceWorker.register('service-worker.js')
+    .then(() => console.log('Service Worker enregistré'))
+    .catch(err => console.error('Erreur SW :', err));
 }
 </script>
 
 </body>
 </html>
+
