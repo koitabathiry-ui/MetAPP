@@ -5,11 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MetAPP – MALI-METEO</title>
 
-<!-- ===== PWA ===== -->
 <link rel="manifest" href="manifest.json">
 
 <style>
-/* ===================== CSS ===================== */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -51,9 +49,16 @@ nav button:hover {
   display: block;
 }
 
-select, audio, a {
+select, textarea, input, audio, a, button {
   width: 100%;
   margin-top: 10px;
+}
+
+.admin-box {
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-top: 20px;
 }
 
 footer {
@@ -84,8 +89,8 @@ footer {
 
 <section id="accueil" class="page active">
   <h2>Bienvenue</h2>
-  <p>MALI-METEO est le service national chargé de la météorologie au Mali.</p>
-  <p>Contact : contact@malimeteo.ml</p>
+  <p>Agence nationale de la météorologie au Mali (MALI-METEO)</p>
+  <p>Contact : malimeteo@malimeteo.ml</p>
 </section>
 
 <section id="previsions" class="page">
@@ -95,20 +100,35 @@ footer {
     <option value="quotidienne">Quotidienne</option>
     <option value="hebdomadaire">Hebdomadaire</option>
     <option value="saisonniere">Saisonnière</option>
+    <option value="alertes">Alerte</option>
+    <option value="projections climatiques">Projections climatiques</option>
   </select>
 
   <div id="contenuPrev"></div>
+
+  <!-- ===== ADMIN ===== -->
+  <div class="admin-box">
+    <h3>Administration</h3>
+
+    <textarea id="texteAdmin" placeholder="Texte du bulletin météo"></textarea>
+
+    <label>Bulletin PDF</label>
+    <input type="file" id="pdfAdmin" accept="application/pdf">
+
+    <label>Audio Bambara</label>
+    <input type="file" id="audioAdmin" accept="audio/*">
+
+    <button onclick="sauvegarderPrevision()">Enregistrer le bulletin</button>
+  </div>
 </section>
 
 <section id="donnees" class="page">
   <h2>Requête de données</h2>
-  <p>Soumettez une demande officielle de données météorologiques.</p>
   <a href="#" onclick="alert('Formulaire à intégrer')">Ouvrir le formulaire</a>
 </section>
 
 <section id="archives" class="page">
   <h2>Archives météo</h2>
-  <p>Historique des événements météorologiques du Mali.</p>
 </section>
 
 <section id="aide" class="page">
@@ -123,61 +143,67 @@ footer {
 </footer>
 
 <script>
-/* ===================== JAVASCRIPT ===================== */
-
-// Navigation entre pages
+// Navigation
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-// Prévisions météo (texte + audio)
-const previsions = {
-  quotidienne: {
-    texte: "Temps chaud avec possibilité d’orage isolé.",
-    audio: "assets/audio/quotidienne.mp3"
-  },
-  hebdomadaire: {
-    texte: "Pluies modérées attendues cette semaine.",
-    audio: "assets/audio/hebdo.mp3"
-  },
-  saisonniere: {
-    texte: "Saison des pluies normale à excédentaire.",
-    audio: "assets/audio/saisonniere.mp3"
-  }
-};
+// Sauvegarde admin
+function sauvegarderPrevision() {
+  const type = document.getElementById("typePrev").value;
+  const texte = document.getElementById("texteAdmin").value;
+  const pdf = document.getElementById("pdfAdmin").files[0];
+  const audio = document.getElementById("audioAdmin").files[0];
 
+  const data = {
+    texte,
+    pdf: pdf ? URL.createObjectURL(pdf) : "",
+    audio: audio ? URL.createObjectURL(audio) : ""
+  };
+
+  localStorage.setItem("prevision_" + type, JSON.stringify(data));
+  alert("Bulletin enregistré ✅");
+  chargerPrevision();
+}
+
+// Affichage utilisateur
 function chargerPrevision() {
   const type = document.getElementById("typePrev").value;
-  const data = previsions[type];
+  const data = JSON.parse(localStorage.getItem("prevision_" + type));
+
+  if (!data) {
+    document.getElementById("contenuPrev").innerHTML =
+      "<p>Aucune prévision disponible.</p>";
+    return;
+  }
 
   document.getElementById("contenuPrev").innerHTML = `
     <p>${data.texte}</p>
-    <audio controls src="${data.audio}"></audio>
+    ${data.pdf ? `<a href="${data.pdf}" target="_blank">📄 Télécharger le bulletin PDF</a>` : ""}
+    ${data.audio ? `<audio controls src="${data.audio}"></audio>` : ""}
   `;
 }
 
 // Glossaire
 const glossaire = [
-  { terme: "Orage", definition: "Phénomène avec pluie, vent et tonnerre." },
+  { terme: "Orage", definition: "Perturbation météorologique convective associée un nuage à extension verticale, le cumulonimbus.." },
+  { terme: "Pluie", definition: "Chute de gouttelettes dont le diamètre atteint ou depasse 0.5mm.." },
   { terme: "Vigilance", definition: "Niveau d’alerte météorologique." }
 ];
 
-let ghtml = "";
-glossaire.forEach(g => {
-  ghtml += `<p><strong>${g.terme}</strong> : ${g.definition}</p>`;
-});
-document.getElementById("glossaire").innerHTML = ghtml;
+document.getElementById("glossaire").innerHTML =
+  glossaire.map(g => `<p><strong>${g.terme}</strong> : ${g.definition}</p>`).join("");
 
 chargerPrevision();
 
-/* ===== SERVICE WORKER ===== */
+// Service Worker
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register('service-worker.js')
-    .then(() => console.log('Service Worker enregistré'))
-    .catch(err => console.error('Erreur SW :', err));
+  navigator.serviceWorker.register('service-worker.js');
 }
 </script>
 
 </body>
 </html>
+
+
