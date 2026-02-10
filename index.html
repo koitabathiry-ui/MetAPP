@@ -135,15 +135,15 @@ function showPage(id) {
 const previsions = {
   quotidienne: {
     texte: "Temps chaud avec possibilité d’orage isolé.",
-    audio: "" // Ajouter fichier mp3/ogg ici
+    audio: "assets/audio/quotidienne.mp3"
   },
   hebdomadaire: {
     texte: "Pluies modérées attendues cette semaine.",
-    audio: ""
+    audio: "assets/audio/hebdo.mp3"
   },
   saisonniere: {
     texte: "Saison des pluies normale à excédentaire.",
-    audio: ""
+    audio: "assets/audio/saisonniere.mp3"
   }
 };
 
@@ -153,7 +153,7 @@ function chargerPrevision() {
 
   document.getElementById("contenuPrev").innerHTML = `
     <p>${data.texte}</p>
-    ${data.audio ? `<audio controls src="${data.audio}"></audio>` : ""}
+    <audio controls src="${data.audio}"></audio>
   `;
 }
 
@@ -181,4 +181,3 @@ if ("serviceWorker" in navigator) {
 
 </body>
 </html>
-
