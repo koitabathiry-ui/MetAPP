@@ -100,8 +100,6 @@ footer {
     <option value="quotidienne">Quotidienne</option>
     <option value="hebdomadaire">Hebdomadaire</option>
     <option value="saisonniere">Saisonnière</option>
-    <option value="alertes">Alerte</option>
-    <option value="projections climatiques">Projections climatiques</option>
   </select>
 
   <div id="contenuPrev"></div>
@@ -115,13 +113,13 @@ footer {
     <label>Bulletin PDF</label>
     <input type="file" id="pdfAdmin" accept="application/pdf">
 
-    <label>Audio Bambara</label>
+    <label>Audio Bambara (enregistrement direct)</label>
     <button onclick="demarrerEnregistrement()">🎙️ Démarrer</button>
     <button onclick="arreterEnregistrement()">⏹️ Arrêter</button>
 
     <audio id="previewAudio" controls></audio>
-    
-    <button onclick="sauvegarderPrevision()">Enregistrer le bulletin</button>
+
+    <button onclick="sauvegarderPrevision()">💾 Enregistrer le bulletin</button>
   </div>
 </section>
 
@@ -146,31 +144,63 @@ footer {
 </footer>
 
 <script>
-// Navigation
+// ================= NAVIGATION =================
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-// Sauvegarde admin
+// ================= AUDIO ENREGISTREMENT =================
+let mediaRecorder;
+let audioChunks = [];
+let audioBase64 = "";
+
+function demarrerEnregistrement() {
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunks, { type: "audio/webm" });
+        const reader = new FileReader();
+
+        reader.onloadend = () => {
+          audioBase64 = reader.result;
+          document.getElementById("previewAudio").src = audioBase64;
+        };
+
+        reader.readAsDataURL(blob);
+      };
+    })
+    .catch(() => alert("Accès au micro refusé ❌"));
+}
+
+function arreterEnregistrement() {
+  if (mediaRecorder) mediaRecorder.stop();
+}
+
+// ================= ADMIN SAUVEGARDE =================
 function sauvegarderPrevision() {
   const type = document.getElementById("typePrev").value;
   const texte = document.getElementById("texteAdmin").value;
-  const pdf = document.getElementById("pdfAdmin").files[0];
-  const audio = document.getElementById("audioAdmin").files[0];
+  const pdfFile = document.getElementById("pdfAdmin").files[0];
 
   const data = {
-    texte,
-    pdf: pdf ? URL.createObjectURL(pdf) : "",
-    audio: audio ? URL.createObjectURL(audio) : ""
+    texte: texte,
+    pdf: pdfFile ? URL.createObjectURL(pdfFile) : "",
+    audio: audioBase64
   };
 
   localStorage.setItem("prevision_" + type, JSON.stringify(data));
-  alert("Bulletin enregistré ✅");
+  alert("Bulletin enregistré avec succès ✅");
   chargerPrevision();
 }
 
-// Affichage utilisateur
+// ================= AFFICHAGE UTILISATEUR =================
 function chargerPrevision() {
   const type = document.getElementById("typePrev").value;
   const data = JSON.parse(localStorage.getItem("prevision_" + type));
@@ -188,10 +218,10 @@ function chargerPrevision() {
   `;
 }
 
-// Glossaire
+// ================= GLOSSAIRE =================
 const glossaire = [
-  { terme: "Orage", definition: "Perturbation météorologique convective associée un nuage à extension verticale, le cumulonimbus.." },
-  { terme: "Pluie", definition: "Chute de gouttelettes dont le diamètre atteint ou depasse 0.5mm.." },
+  { terme: "Orage", definition: "Perturbation météorologique convective." },
+  { terme: "Pluie", definition: "Chute de gouttelettes d’eau." },
   { terme: "Vigilance", definition: "Niveau d’alerte météorologique." }
 ];
 
@@ -200,7 +230,7 @@ document.getElementById("glossaire").innerHTML =
 
 chargerPrevision();
 
-// Service Worker
+// ================= SERVICE WORKER =================
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register('service-worker.js');
 }
@@ -208,6 +238,3 @@ if ("serviceWorker" in navigator) {
 
 </body>
 </html>
-
-
-
