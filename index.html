@@ -116,8 +116,11 @@ footer {
     <input type="file" id="pdfAdmin" accept="application/pdf">
 
     <label>Audio Bambara</label>
-    <input type="file" id="audioAdmin" accept="audio/*">
+    <button onclick="demarrerEnregistrement()">🎙️ Démarrer</button>
+    <button onclick="arreterEnregistrement()">⏹️ Arrêter</button>
 
+    <audio id="previewAudio" controls></audio>
+    
     <button onclick="sauvegarderPrevision()">Enregistrer le bulletin</button>
   </div>
 </section>
@@ -205,5 +208,6 @@ if ("serviceWorker" in navigator) {
 
 </body>
 </html>
+
 
 
